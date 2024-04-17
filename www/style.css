@@ -1,0 +1,10 @@
+.titre {
+color : rgb(25, 153,192);
+font-weight : bold;
+text-decoration : underline;
+text-align : center;
+}
+
+.radiobtn {
+	color : rgb(25, 153,192);
+}
