@@ -26,8 +26,13 @@ p_charge %>%
 
 
 r <- orientation %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
-t <- r %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Volume=n())
-t2 <- t
+t <- r %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Volume_orient=n())
+u <- p_charge %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
+w <- u %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Volume_p_charge=n())
+z <- t %>% left_join(w)
+
+
+t2 <- z
 t2$Volume <- as.numeric(t2$Volume)
 
 

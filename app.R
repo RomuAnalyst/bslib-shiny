@@ -1,4 +1,4 @@
-
+library(ggplot2)
 library(bslib)
 library(shiny)
 library(crosstalk)
@@ -11,6 +11,7 @@ library(dplyr)
 library(shinythemes)
 library(sf)
 library(reactable)
+library(palmerpenguins)
 
 
 
@@ -19,82 +20,30 @@ library(reactable)
 
 # setwd("/Users/romuanalyst/Documents/Shiny_exercice/dossier sans titre")
 
-#source('Manipulation_données.R')
+# source('Manipulation_données.R') https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnwkFfKzrCAvFNJoC7xoflOKYgIPHFIIenolqBo2FO9A&s
+# p(h6(paste0("Pour l'année ", unique(filtered_data()$ANNEE), ", le taux d'accompagnements est de ", paste0(round(sum(filtered_data()$Volume_p_charge) / sum(filtered_data()$Volume_orient) * 100, 2), "%")))),
+
+
+
 orientation <- readRDS("datas/df_orientation.rds")
 max_valeur <- max(diamonds$price)
 
 
 
-graph_line <- plot_ly(t) %>%
-  add_trace(
-    x = ~date, y = ~Volume,
-    color = I("white"), span = I(1),
-    fill = 'tozeroy', alpha = 0.2
-  ) %>%
-  layout(
-    xaxis = list(visible = F, showgrid = F, title = ""),
-    yaxis = list(visible = F, showgrid = F, title = ""),
-    hovermode = "x",
-    margin = list(t = 0, r = 0, l = 0, b = 0),
-    font = list(color = "white"),
-    paper_bgcolor = "transparent",
-    plot_bgcolor = "transparent"
-  ) %>%
-  config(displayModeBar = F) %>%
-  htmlwidgets::onRender(
-    "function(el) {
-      var ro = new ResizeObserver(function() {
-         var visible = el.offsetHeight > 200;
-         Plotly.relayout(el, {'xaxis.visible': visible});
-      });
-      ro.observe(el);
-    }"
-  )
 
-boxes <- layout_column_wrap(
-  width = "200px",
-  class = "mt-3",
-  value_box(
-    title = "Unemployment Rate",
-    value = "2.7%",
-    p("Started at 1.5%"),
-    p("Averaging 3%"),
-    p("Peaked at 5.2% in Dec 1982"),
-    showcase = graph_line,
-    showcase_layout = showcase_left_center(),
-    theme = "success",
-    full_screen = TRUE
-  ),
-  value_box(
-    title = "Personal Savings Rate",
-    value = "7.6%",
-    p("Started at 12.6%"),
-    p("Averaging 8.6%"),
-    p("Peaked at 17.3% in May 1975"),
-    showcase = graph_line,
-    showcase_layout = showcase_bottom(),
-    full_screen = TRUE,
-    theme = "success"
-  ),
-  value_box(
-    title = "Personal Consumption",
-    value = "$3.8B",
-    p("Started at $0.25B"),
-    p("Averaging $1.7B"),
-    showcase = bsicons::bs_icon("piggy-bank", size = "100%"),
-    full_screen = TRUE,
-    theme = "danger"
-  )
-)
 
 
 data_filter <- div(
-  selectInput("year_filter", "Année(s) à afficher :", 
-              choices = unique(t$ANNEE), 
-              selected = unique(t$ANNEE)[length(unique(t$ANNEE))], 
+  selectInput("year_filt2", h5("Année(s) à afficher :"), 
+              choices = unique(t2$ANNEE), 
+              selected = unique(t2$ANNEE)[length(unique(t2$ANNEE))], 
               multiple = TRUE))
 
-
+value_filter <- div(
+  selectInput("year_filter", h5("Année à afficher :"), 
+              choices = unique(t2$ANNEE), 
+              selected = unique(t2$ANNEE)[length(unique(t2$ANNEE))], 
+              multiple = FALSE))
 
 
 # Creates the "filter link" between the controls and plots
@@ -115,14 +64,14 @@ map_quakes <- leaflet(quake_dat) |>
   addTiles() |>
   addCircleMarkers()
 
-accueil <- card(div(
-  layout_columns(img(card_image(file = "https://romuanalyst.github.io/Website2/img/Avatar.png", height = 600)))
+accueil <- card(
+(card_image(file = "image/image_fond.png", height = 600)
 ),
 card_footer(div(code('romu@nalyst'), style = "text-align: right;")))
   
 sidebar_quakes <- layout_sidebar(
-  sidebar = map_filter,
-  boxes,map_quakes
+  sidebar = value_filter,
+  uiOutput("boxes"),map_quakes
 )
 
 sidebar_diamonds <- layout_sidebar(
@@ -139,7 +88,18 @@ sidebar_data <- layout_sidebar(
 )
 
 ui <- page_navbar(
-  title = "Application Shiny",
+  title = tags$span(
+    tags$img(
+      src = "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/eb15c068e7e8df02348f84371d67ba06",
+      width = "36px",
+      height = "auto",
+      class = "me-3",
+      alt = "AccOrient"
+    ),
+    "Orientations et Prises en charge"
+  ),
+  setBackgroundImage(
+    src = "https://wallpapers.com/images/hd/abstract-blueish-white-color-nrvpjoky2673bptv.jpg"),
   tags$head(
     tags$style(HTML("
 
@@ -148,6 +108,11 @@ ui <- page_navbar(
           outline: 6px solid white;
           border-radius: 8px;
           margin-bottom: 30px;
+        }
+        
+        
+        code{
+          color: purple;
         }
         
         h2, h3{
@@ -160,9 +125,9 @@ ui <- page_navbar(
           color: purple;
         }
         h6, h5{
-          color: purple;
+          color: lightblue;
           text-align: center;
-          font-weight: bold;
+          font-family: Times New Roman;
         }
         "
     )),
@@ -176,6 +141,102 @@ ui <- page_navbar(
 )
 
 server <- function(input, output) {
+  
+  taux <- flexdashboard::renderGauge({
+    flexdashboard::gauge((sum(filtered_data()$Volume_p_charge) / sum(filtered_data()$Volume_orient)*100), min = 0, max = 100, symbol = '%', label = paste("Taux d'accompagnements"),
+                         flexdashboard::gaugeSectors(success = c(0.55, 1), warning = c(0.4,0.54), danger = c(0, 0.39), colors = c("#CC6699")
+                         ))})
+  
+  
+  
+  filtered_data <- reactive({
+    t2[t2$ANNEE %in% input$year_filter, ]
+  })
+  
+  output$boxes <- renderUI({
+    boxes <- layout_column_wrap(
+      value_box(
+        title = "Orientations", 
+        value = format(sum(filtered_data()$Volume_orient), big.mark = " "), 
+        theme = "bg-gradient-cyan-red",
+        showcase = graph_line, showcase_layout = "top right",
+        full_screen = TRUE, fill = FALSE, height = NULL
+      ),
+      value_box(
+        title = "Accompagnements", 
+        value = format(sum(filtered_data()$Volume_p_charge), big.mark = " "), 
+        theme = "bg-gradient-cyan-red",
+        showcase = graph_line2, showcase_layout = "top right",
+        full_screen = TRUE, fill = FALSE, height = NULL
+      ),
+      value_box(
+        title = "", 
+        value = "Taux d'acc.",
+        theme = "bg-gradient-green-red",
+        showcase = taux, showcase_layout = "top right",
+        full_screen = FALSE, fill = FALSE, height = NULL
+      )
+    )
+    boxes
+  })
+  
+  graph_line <- renderPlotly({
+    plot_ly(filtered_data()) %>%
+      add_bars(
+        x = ~date, y = ~Volume_orient,
+        color = I("white"), span = I(1),
+        fill = 'tozeroy', alpha = 0.2
+      ) %>%
+      layout(
+        xaxis = list(visible = F, showgrid = F, title = ""),
+        yaxis = list(visible = F, showgrid = F, title = ""),
+        hovermode = "x",
+        margin = list(t = 0, r = 0, l = 0, b = 0),
+        font = list(color = "white"),
+        paper_bgcolor = "transparent",
+        plot_bgcolor = "transparent"
+      ) %>%
+      config(displayModeBar = F) %>%
+      htmlwidgets::onRender(
+        "function(el) {
+          var ro = new ResizeObserver(function() {
+             var visible = el.offsetHeight > 200;
+             Plotly.relayout(el, {'xaxis.visible': visible});
+          });
+          ro.observe(el);
+        }"
+      )
+  })
+
+  graph_line2 <- renderPlotly({
+    plot_ly(filtered_data()) %>%
+      add_trace(
+        x = ~date, y = ~Volume_p_charge,
+        color = I("white"), span = I(1),
+        fill = 'tozeroy', alpha = 0.2
+      ) %>%
+      layout(
+        xaxis = list(visible = F, showgrid = F, title = ""),
+        yaxis = list(visible = F, showgrid = F, title = ""),
+        hovermode = "x",
+        margin = list(t = 0, r = 0, l = 0, b = 0),
+        font = list(color = "white"),
+        paper_bgcolor = "transparent",
+        plot_bgcolor = "transparent"
+      ) %>%
+      config(displayModeBar = F) %>%
+      htmlwidgets::onRender(
+        "function(el) {
+          var ro = new ResizeObserver(function() {
+             var visible = el.offsetHeight > 200;
+             Plotly.relayout(el, {'xaxis.visible': visible});
+          });
+          ro.observe(el);
+        }"
+      )
+  })
+  
+  
   gg_plot <- reactive({
     ggplot(penguins) +
       geom_density(aes(fill = !!input$color_by), alpha = 0.2) +
@@ -189,7 +250,7 @@ server <- function(input, output) {
   
   output$page_data <- renderUI({
       output$tableau <- renderReactable({
-        reactable(data = t[t$ANNEE %in% input$year_filter, ])
+        reactable(data = t2[t$ANNEE %in% input$year_filt2, ])
       })})
 }
 
