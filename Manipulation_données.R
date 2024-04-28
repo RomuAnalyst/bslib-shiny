@@ -25,14 +25,20 @@ p_charge %>%
   write_rds(file = "datas/df_p_charge.rds")
 
 
-r <- orientation %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
-t <- r %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Volume_orient=n())
-u <- p_charge %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
-w <- u %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Volume_p_charge=n())
-z <- t %>% left_join(w)
+o1 <- orientation %>% filter(REGION != "") %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
+table_orient <- o1 %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Orientés=n())
+a1 <- p_charge %>% mutate(REGION = coalesce(REGION, ""),
+                         MOTIF_FIN_ACC = coalesce(MOTIF_FIN_ACC, "")) %>%
+  filter(REGION != "" &
+           (MOTIF_FIN_ACC == "Accompagnement terminé" |
+              MOTIF_FIN_ACC == "")) %>% mutate(MOIS_ANNEE = paste(ANNEE,(sprintf("%02d",MOIS)))) %>% mutate(date = as.Date(paste(ANNEE,sprintf("%02d",MOIS),"01", sep = "-")))
+table_acc <- a1 %>% group_by(ANNEE,MOIS,LIB_MOIS,date) %>% arrange (ANNEE, MOIS) %>% summarise(Accompagnés=n())
+table_join <- table_orient %>% left_join(table_acc)
 
 
-t2 <- z
+copie_table <- table_join
+t3 <- table_join %>% mutate(V.acc = sum(Volume_orient)) %>% select(ANNEE, V.acc) %>% group_by(ANNEE, V.acc)
+
 t2$Volume <- as.numeric(t2$Volume)
 
 

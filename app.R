@@ -24,25 +24,57 @@ library(palmerpenguins)
 # p(h6(paste0("Pour l'année ", unique(filtered_data()$ANNEE), ", le taux d'accompagnements est de ", paste0(round(sum(filtered_data()$Volume_p_charge) / sum(filtered_data()$Volume_orient) * 100, 2), "%")))),
 
 
+# Titre modifiable :
+# card_header(
+#   popover(
+#     uiOutput("card_title", inline = TRUE),
+#   title = "Tu peux changerle titre",
+#   textInput("card_title", NULL, "Titre modifiable")
+# )
+# ),
+
+# output$card_title <- renderUI({
+#   list(
+#     input$card_title, 
+#     bsicons::bs_icon("pencil-square")
+#   )
+#})
+
+
+# container <- layout_sidebar(
+# class = "p-0",
+# sidebar = sidebar(
+#   title = "Earthquakes off Fiji",
+#   bg = "#1E1E1E",
+#   width = "35%",
+#   class = "fw-bold font-monospace",
+#   filter_slider("mag", "Magnitude", squake, ~mag)
+# ),
+# leaflet(squake) |> addTiles() |> addCircleMarkers()
+# )
 
 orientation <- readRDS("datas/df_orientation.rds")
 max_valeur <- max(diamonds$price)
 
 
 
-
+heure <-   value_box(
+  title = h5("Date et heure :"),
+  value = h4(textOutput("time")),
+  showcase = bs_icon("clock")
+)
 
 
 data_filter <- div(
   selectInput("year_filt2", h5("Année(s) à afficher :"), 
-              choices = unique(t2$ANNEE), 
-              selected = unique(t2$ANNEE)[length(unique(t2$ANNEE))], 
+              choices = unique(copie_table$ANNEE), 
+              selected = unique(copie_table$ANNEE)[length(unique(copie_table$ANNEE))], 
               multiple = TRUE))
 
 value_filter <- div(
   selectInput("year_filter", h5("Année à afficher :"), 
-              choices = unique(t2$ANNEE), 
-              selected = unique(t2$ANNEE)[length(unique(t2$ANNEE))], 
+              choices = unique(copie_table$ANNEE), 
+              selected = unique(copie_table$ANNEE)[length(unique(copie_table$ANNEE))], 
               multiple = FALSE))
 
 
@@ -65,7 +97,7 @@ map_quakes <- leaflet(quake_dat) |>
   addCircleMarkers()
 
 accueil <- card(
-(card_image(file = "image/image_fond.png", height = 600)
+(card_image(file = "image/accueil_image.png", height = 600)
 ),
 card_footer(div(code('romu@nalyst'), style = "text-align: right;")))
   
@@ -75,7 +107,7 @@ sidebar_quakes <- layout_sidebar(
 )
 
 sidebar_diamonds <- layout_sidebar(
-  sidebar = color_by,
+  sidebar = heure,
   renderPlot(gg_plot)
 )
 
@@ -96,7 +128,7 @@ ui <- page_navbar(
       class = "me-3",
       alt = "AccOrient"
     ),
-    "Orientations et Prises en charge"
+    "Orientations et Accompagnements"
   ),
   setBackgroundImage(
     src = "https://wallpapers.com/images/hd/abstract-blueish-white-color-nrvpjoky2673bptv.jpg"),
@@ -115,8 +147,11 @@ ui <- page_navbar(
           color: purple;
         }
         
-        h2, h3{
-          color: white;
+        h4{
+          text-align: center;
+          font-weight: bold;
+          font-family: Times New Roman;
+          color: blue;
         }
         h1, h2, h3{
           text-align: center;
@@ -142,29 +177,35 @@ ui <- page_navbar(
 
 server <- function(input, output) {
   
+  output$time <- renderText({
+    invalidateLater(1000)
+    format(Sys.time())
+  })
+  
+  
   taux <- flexdashboard::renderGauge({
-    flexdashboard::gauge((sum(filtered_data()$Volume_p_charge) / sum(filtered_data()$Volume_orient)*100), min = 0, max = 100, symbol = '%', label = paste("Taux d'accompagnements"),
-                         flexdashboard::gaugeSectors(success = c(0.55, 1), warning = c(0.4,0.54), danger = c(0, 0.39), colors = c("#CC6699")
+    flexdashboard::gauge((sum(filtered_data()$Accompagnés) / sum(filtered_data()$Orientés)*100), min = 0, max = 100, symbol = '%', label = paste("Taux"),
+    flexdashboard::gaugeSectors(success = c(0.55, 1), warning = c(0.4,0.54), danger = c(0, 0.39), colors = c("#CC6699")
                          ))})
   
   
   
   filtered_data <- reactive({
-    t2[t2$ANNEE %in% input$year_filter, ]
+    copie_table[copie_table$ANNEE %in% input$year_filter, ]
   })
   
   output$boxes <- renderUI({
     boxes <- layout_column_wrap(
       value_box(
         title = "Orientations", 
-        value = format(sum(filtered_data()$Volume_orient), big.mark = " "), 
+        value = format(sum(filtered_data()$Orientés), big.mark = " "), 
         theme = "bg-gradient-cyan-red",
         showcase = graph_line, showcase_layout = "top right",
         full_screen = TRUE, fill = FALSE, height = NULL
       ),
       value_box(
         title = "Accompagnements", 
-        value = format(sum(filtered_data()$Volume_p_charge), big.mark = " "), 
+        value = format(sum(filtered_data()$Accompagnés), big.mark = " "), 
         theme = "bg-gradient-cyan-red",
         showcase = graph_line2, showcase_layout = "top right",
         full_screen = TRUE, fill = FALSE, height = NULL
@@ -172,18 +213,17 @@ server <- function(input, output) {
       value_box(
         title = "", 
         value = "Taux d'acc.",
-        theme = "bg-gradient-green-red",
+        theme = "bg-gradient-blue-cyan",
         showcase = taux, showcase_layout = "top right",
         full_screen = FALSE, fill = FALSE, height = NULL
       )
     )
-    boxes
   })
   
   graph_line <- renderPlotly({
     plot_ly(filtered_data()) %>%
       add_bars(
-        x = ~date, y = ~Volume_orient,
+        x = ~date, y = ~Orientés,
         color = I("white"), span = I(1),
         fill = 'tozeroy', alpha = 0.2
       ) %>%
@@ -211,7 +251,7 @@ server <- function(input, output) {
   graph_line2 <- renderPlotly({
     plot_ly(filtered_data()) %>%
       add_trace(
-        x = ~date, y = ~Volume_p_charge,
+        x = ~date, y = ~Accompagnés,
         color = I("white"), span = I(1),
         fill = 'tozeroy', alpha = 0.2
       ) %>%
@@ -250,7 +290,7 @@ server <- function(input, output) {
   
   output$page_data <- renderUI({
       output$tableau <- renderReactable({
-        reactable(data = t2[t$ANNEE %in% input$year_filt2, ])
+        reactable(data = copie_table[table_join$ANNEE %in% input$year_filt2, ])
       })})
 }
 
