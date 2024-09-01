@@ -1,6 +1,7 @@
 library(tidyverse)
 library(ggplot2)
 library(plotly)
+install.packages("flexdashboard")
 
 
 
