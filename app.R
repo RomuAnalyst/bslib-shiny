@@ -12,6 +12,7 @@ library(shinythemes)
 library(sf)
 library(reactable)
 library(palmerpenguins)
+library(bsicons)
 
 
 
@@ -53,10 +54,17 @@ library(palmerpenguins)
 # leaflet(squake) |> addTiles() |> addCircleMarkers()
 # )
 
+
+
 orientation <- readRDS("datas/df_orientation.rds")
 max_valeur <- max(diamonds$price)
 
-
+texte_intro <- "France Travail, anciennement connu sous le nom de Pôle emploi, est une institution française axée sur les services d'emploi. Elle vise à mieux accompagner les demandeurs d'emploi dans leur recherche et à aider les entreprises dans le recrutement. France Travail joue un rôle essentiel dans l'écosystème de l'emploi, notamment en fournissant des conseils et un soutien aux demandeurs d'emploi, en particulier aux cadres. L'institution s'engage à faciliter les opportunités d'emploi et à favoriser un environnement propice aux demandeurs d'emploi et aux employeurs.  <br>
+	•	L'Apec propose des offres d'emploi pour les cadres, offrant des conseils et un accompagnement à chaque étape de leur vie professionnelle. Vous pouvez trouver des offres d'emploi cadre sur le site officiel de l'Apec, ainsi que sur l'application mobile dédiée, permettant aux candidats de rechercher des opportunités correspondant à leur profil. L'Apec s'engage à soutenir les cadres dans leur recherche d'emploi et à les aider à progresser dans leur carrière professionnelle.  
+Collaboration entre France Travail et APEC :
+	•	Partenariat Renforcé : Pôle emploi (France Travail) et l'APEC ont renforcé leur collaboration pour relever de manière efficace les défis de l'emploi. Leur partenariat inclut des initiatives communes et des efforts coordonnés pour soutenir les demandeurs d'emploi et promouvoir les opportunités d'emploi, en particulier pour les cadres. L'expertise régionale de l'APEC complète le focus local de France Travail, permettant une approche globale pour répondre aux besoins divers des demandeurs d'emploi et des employeurs. 
+	•	Soutien aux Demandeurs d'Emploi : La collaboration entre Pôle emploi (France Travail) et l'APEC comprend des initiatives telles que l'événement #TousMobilisés dédié aux jeunes demandeurs d'emploi. Ces efforts conjoints visent à fournir un soutien spécialisé et des ressources aux demandeurs d'emploi, facilitant leur accès aux opportunités d'emploi et au développement professionnel. En tirant parti de leur expertise et de leurs ressources combinées, Pôle emploi et l'APEC peuvent offrir une gamme plus large de services et de programmes pour aider les individus dans leur recherche d'emploi et leur croissance professionnelle.  
+En résumé, France Travail (Pôle emploi) et l'APEC collaborent pour renforcer l'efficacité des services d'emploi, soutenir les demandeurs d'emploi et promouvoir le développement économique. Leur partenariat allie l'expertise locale et régionale pour répondre aux besoins divers des demandeurs d'emploi et des employeurs, favorisant un environnement propice à l'emploi et à l'avancement professionnel."
 
 heure <-   value_box(
   title = h5("Date et heure :"),
@@ -99,7 +107,7 @@ map_quakes <- leaflet(quake_dat) |>
 accueil <- card(
 (card_image(file = "image/accueil_image.png", height = 600)
 ),
-card_footer(div(code('romu@nalyst'), style = "text-align: right;")))
+card_footer(code('romu@nalyst'), style = "text-align: right;"))
   
 sidebar_quakes <- layout_sidebar(
   sidebar = value_filter,
@@ -108,7 +116,7 @@ sidebar_quakes <- layout_sidebar(
 
 sidebar_diamonds <- layout_sidebar(
   sidebar = heure,
-  renderPlot(gg_plot)
+  card(card_header("Présentation"), card_body(texte_intro),card_footer(code('romu@nalyst'), style = "text-align: right;"))
 )
 
 sidebar_accueil <-
@@ -212,7 +220,7 @@ server <- function(input, output) {
       ),
       value_box(
         title = "", 
-        value = "Taux d'acc.",
+        value = "% acc.",
         theme = "bg-gradient-blue-cyan",
         showcase = taux, showcase_layout = "top right",
         full_screen = FALSE, fill = FALSE, height = NULL

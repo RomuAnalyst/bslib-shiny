@@ -46,8 +46,8 @@ ggplot(t, aes(x = factor(MOIS, levels = 1:12), y = Volume, fill = factor(ANNEE))
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
   labs(x = "Mois", y = "Volume", fill = "Année") +
   scale_fill_manual(values = c("#FFFF66", "#66CCFF", "#FF6666")) +  # Couleurs par année
-  scale_x_discrete(labels = t$LIB_MOIS[1:12]) +  # Noms des mois
-  theme_minimal()
+  scale_x_discrete(labels = t$LIB_MOIS[1:12]) +  # Noms des mois en fonction des n° de mois
+  theme_classic()
 
 
 fig <- plot_ly(t, x = ~MOIS, y = ~Volume, color = ~factor(ANNEE), type = 'scatter', mode = 'lines') %>%
@@ -57,3 +57,48 @@ fig <- plot_ly(t, x = ~MOIS, y = ~Volume, color = ~factor(ANNEE), type = 'scatte
          hovermode = "closest")
 
 fig
+
+library(plotly)
+
+plot_ly(t, x = ~factor(MOIS, levels = 1:12), y = ~Volume, color = ~factor(ANNEE)) %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Mois", ticktext = t$LIB_MOIS[1:12], tickvals = 1:12),
+         yaxis = list(title = "Volume"),
+         legend = list(title = "Année")) %>%
+  layout(barmode = "group")
+
+
+library(plotly)
+
+plot_ly(table_join, x = ~factor(MOIS, levels = 1:12), y = ~Accompagnés, color = ~factor(ANNEE)) %>%
+  add_lines() %>%
+  layout(xaxis = list(title = "Mois", ticktext = t$LIB_MOIS[1:12], tickvals = 1:12),
+         yaxis = list(title = "Volume"),
+         legend = list(title = "Année"))
+
+library(plotly)
+
+# Création de données aléatoires pour l'exemple
+data <- data.frame(x = 1:10, y = rnorm(10))
+
+# Création du graphique interactif avec une courbe
+plot_ly(t2022, x = ~LIB_MOIS, y = ~Orientés, type = 'scatter', mode = 'lines', color = ~factor(ANNEE))
+t2022 <- table_join %>% filter(ANNEE == "2022")
+
+
+plot_ly(table_join, x = ~MOIS, y = ~Orientés, color = ~factor(ANNEE), type = 'scatter', mode = 'lines') %>%
+  layout(xaxis = list(title = "Mois", ticktext = t$LIB_MOIS[1:12], tickvals = 1:12),
+         yaxis = list(title = "Volume"),
+         legend = list(title = "Année"))
+
+
+plot_ly(table_acc, x = ~MOIS, y = ~Accompagnés) %>% add_lines(y = ~Accompagnés)
+
+p <- plot_ly(palmerpenguins::penguins, x = ~bill_length_mm, y = ~body_mass_g)
+add_markers(p, color = ~bill_depth_mm, size = ~bill_depth_mm)
+add_markers(p, color = ~species)
+add_markers(p, color = ~species, colors = "Set1")
+add_markers(p, symbol = ~species)
+add_paths(p, linetype = ~species)
+
+p
