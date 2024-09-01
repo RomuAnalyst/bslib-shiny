@@ -37,23 +37,5 @@ table_join <- table_orient %>% left_join(table_acc)
 
 
 copie_table <- table_join
-t3 <- table_join %>% mutate(V.acc = sum(Volume_orient)) %>% select(ANNEE, V.acc) %>% group_by(ANNEE, V.acc)
 
 t2$Volume <- as.numeric(t2$Volume)
-
-
-ggplot(t, aes(x = factor(MOIS, levels = 1:12), y = Volume, fill = factor(ANNEE))) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-  labs(x = "Mois", y = "Volume", fill = "Année") +
-  scale_fill_manual(values = c("#FFFF66", "#66CCFF", "#FF6666")) +  # Couleurs par année
-  scale_x_discrete(labels = t$LIB_MOIS[1:12]) +  # Noms des mois
-  theme_minimal()
-
-
-fig <- plot_ly(t, x = ~MOIS, y = ~Volume, color = ~factor(ANNEE), type = 'scatter', mode = 'lines') %>%
-  layout(title = "Volumes par Mois et Année",
-         xaxis = list(title = "Mois"),
-         yaxis = list(title = "Volume"),
-         hovermode = "closest")
-
-fig
